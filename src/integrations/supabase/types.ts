@@ -14,16 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      posts: {
+        Row: {
+          author_college: string
+          author_department: string
+          author_id: string
+          author_name: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          location_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_college: string
+          author_department: string
+          author_id: string
+          author_name: string
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          location_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_college?: string
+          author_department?: string
+          author_id?: string
+          author_name?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          location_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          college_name: string
+          created_at: string
+          department_name: string
+          display_name: string
+          id: string
+          is_active: boolean
+          username: string
+        }
+        Insert: {
+          college_name?: string
+          created_at?: string
+          department_name?: string
+          display_name: string
+          id: string
+          is_active?: boolean
+          username: string
+        }
+        Update: {
+          college_name?: string
+          created_at?: string
+          department_name?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          username?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_active_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +249,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "student"],
+    },
   },
 } as const
