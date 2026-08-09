@@ -257,13 +257,17 @@ function SignupForm() {
     setBusy(false);
 
     if (error) {
+      const message = error.message.toLowerCase();
       setServerError(
-        error.message.toLowerCase().includes("already")
+        message.includes("already")
           ? "An account with this email already exists."
-          : "Sign up failed. Please try again.",
+          : message.includes("password")
+            ? "This password is too weak or has appeared in a data breach. Please choose another."
+            : "Sign up failed. Please try again.",
       );
       return;
     }
+
 
     await supabase.auth.signOut();
     toast.success("Sign up successful! Please log in with your credentials.");
