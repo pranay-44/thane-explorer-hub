@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ApiPublicPostImageSplatRouteImport } from './routes/api/public/post-image/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPostImageSplatRoute = ApiPublicPostImageSplatRouteImport.update({
@@ -25,27 +31,31 @@ const ApiPublicPostImageSplatRoute = ApiPublicPostImageSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/post-image/$'
+  fullPaths: '/' | '/explore' | '/api/public/post-image/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/post-image/$'
-  id: '__root__' | '/' | '/api/public/post-image/$'
+  to: '/' | '/explore' | '/api/public/post-image/$'
+  id: '__root__' | '/' | '/explore' | '/api/public/post-image/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExploreRoute: typeof ExploreRoute
   ApiPublicPostImageSplatRoute: typeof ApiPublicPostImageSplatRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/post-image/$': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExploreRoute: ExploreRoute,
   ApiPublicPostImageSplatRoute: ApiPublicPostImageSplatRoute,
 }
 export const routeTree = rootRouteImport
