@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as PostsIdRouteImport } from './routes/posts.$id'
 import { Route as ApiPublicPostImageSplatRouteImport } from './routes/api/public/post-image/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PostsIdRoute = PostsIdRouteImport.update({
+  id: '/posts/$id',
+  path: '/posts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPostImageSplatRoute = ApiPublicPostImageSplatRouteImport.update({
   id: '/api/public/post-image/$',
   path: '/api/public/post-image/$',
@@ -32,30 +38,34 @@ const ApiPublicPostImageSplatRoute = ApiPublicPostImageSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/explore': typeof ExploreRoute
+  '/posts/$id': typeof PostsIdRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/explore': typeof ExploreRoute
+  '/posts/$id': typeof PostsIdRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/explore': typeof ExploreRoute
+  '/posts/$id': typeof PostsIdRoute
   '/api/public/post-image/$': typeof ApiPublicPostImageSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/explore' | '/api/public/post-image/$'
+  fullPaths: '/' | '/explore' | '/posts/$id' | '/api/public/post-image/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/explore' | '/api/public/post-image/$'
-  id: '__root__' | '/' | '/explore' | '/api/public/post-image/$'
+  to: '/' | '/explore' | '/posts/$id' | '/api/public/post-image/$'
+  id: '__root__' | '/' | '/explore' | '/posts/$id' | '/api/public/post-image/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExploreRoute: typeof ExploreRoute
+  PostsIdRoute: typeof PostsIdRoute
   ApiPublicPostImageSplatRoute: typeof ApiPublicPostImageSplatRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/posts/$id': {
+      id: '/posts/$id'
+      path: '/posts/$id'
+      fullPath: '/posts/$id'
+      preLoaderRoute: typeof PostsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/post-image/$': {
       id: '/api/public/post-image/$'
       path: '/api/public/post-image/$'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExploreRoute: ExploreRoute,
+  PostsIdRoute: PostsIdRoute,
   ApiPublicPostImageSplatRoute: ApiPublicPostImageSplatRoute,
 }
 export const routeTree = rootRouteImport
