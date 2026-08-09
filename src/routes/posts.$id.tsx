@@ -5,16 +5,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { CategoryBadge } from "@/components/CategoryBadge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, postImageSrc } from "@/lib/categories";
 import { renderBasicMarkdown, excerpt } from "@/lib/markdown";
@@ -161,20 +151,41 @@ function PostDetail() {
         )}
       </div>
 
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this post?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete post"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {confirming && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4"
+        >
+          <div className="surface-panel w-full max-w-sm p-6">
+            <h2 id="delete-title" className="text-lg font-semibold">
+              Delete this post?
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This permanently removes “{post.title}” from Thane Connect.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="tap-target rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="tap-target rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete post"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </article>
   );
 }

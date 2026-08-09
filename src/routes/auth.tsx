@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -38,9 +38,9 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user } = useSession();
 
-  if (user) {
-    navigate({ to: "/explore", search: { page: 1 }, replace: true });
-  }
+  useEffect(() => {
+    if (user) navigate({ to: "/explore", search: { page: 1 }, replace: true });
+  }, [user, navigate]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12 sm:px-6">
