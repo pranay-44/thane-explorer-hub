@@ -378,10 +378,10 @@ function SignupField({
   id: string;
   label: string;
   value: string;
-  error?: string;
-  hint?: string;
-  type?: string;
-  autoComplete?: string;
+  error?: string | undefined;
+  hint?: string | undefined;
+  type?: string | undefined;
+  autoComplete?: string | undefined;
   onChange: (value: string) => void;
   onBlur: () => void;
 }) {
