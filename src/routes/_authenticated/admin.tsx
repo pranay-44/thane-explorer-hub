@@ -7,6 +7,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, formatDate } from "@/lib/categories";
 import { useIsAdmin, useSession } from "@/lib/use-auth";
+import { generateStudentIds } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -21,11 +22,20 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminDashboard,
 });
 
+type GeneratedAccount = { studentId: string; password: string };
+
 function AdminDashboard() {
   const { user } = useSession();
   const { data: isAdmin, isLoading: checkingRole } = useIsAdmin(user?.id);
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // --- Generate Student IDs state ---
+  const [genCount, setGenCount] = useState(150);
+  const [genPrefix, setGenPrefix] = useState("thane");
+  const [genBusy, setGenBusy] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const [genResults, setGenResults] = useState<GeneratedAccount[]>([]);
 
   const { data: posts } = useQuery({
     queryKey: ["admin-posts"],
@@ -100,6 +110,41 @@ function AdminDashboard() {
     toast.success(isActive ? "Account disabled" : "Account enabled");
   }
 
+  async function handleGenerate(event: React.FormEvent) {
+    event.preventDefault();
+    setGenBusy(true);
+    setGenError(null);
+    setGenResults([]);
+    try {
+      const result = await generateStudentIds({ data: { count: genCount, prefix: genPrefix } });
+      setGenResults(result.created);
+      if (result.failed.length > 0) {
+        setGenError(`${result.failed.length} account(s) failed — see console for details.`);
+        console.error("generateStudentIds failures:", result.failed);
+      }
+      if (result.created.length > 0) {
+        toast.success(`Created ${result.created.length} student account(s)`);
+        await queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      }
+    } catch (error) {
+      setGenError(error instanceof Error ? error.message : "Could not generate accounts.");
+    } finally {
+      setGenBusy(false);
+    }
+  }
+
+  function downloadCsv() {
+    const header = "Student ID,Password\n";
+    const rows = genResults.map((row) => `${row.studentId},${row.password}`).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${genPrefix}-student-logins.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <h1 className="font-display text-3xl font-bold">Admin dashboard</h1>
@@ -112,6 +157,82 @@ function AdminDashboard() {
           value={students?.filter((student) => !student.is_active).length ?? 0}
         />
       </div>
+
+      <section className="surface-panel mt-8 p-6">
+        <h2 className="text-lg font-semibold">Generate student logins</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Creates new Student ID + password accounts directly — students can't sign
+          themselves up. Passwords are shown only once, right after generation, so
+          download the CSV before leaving this page.
+        </p>
+
+        <form onSubmit={handleGenerate} className="mt-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="gen-prefix" className="text-xs font-semibold">
+              ID prefix
+            </label>
+            <input
+              id="gen-prefix"
+              value={genPrefix}
+              onChange={(event) => setGenPrefix(event.target.value)}
+              className="tap-target mt-1 w-32 rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label htmlFor="gen-count" className="text-xs font-semibold">
+              How many
+            </label>
+            <input
+              id="gen-count"
+              type="number"
+              min={1}
+              max={300}
+              value={genCount}
+              onChange={(event) => setGenCount(Number(event.target.value))}
+              className="tap-target mt-1 w-28 rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={genBusy}
+            className="tap-target rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            {genBusy ? "Generating..." : "Generate"}
+          </button>
+          {genResults.length > 0 && (
+            <button
+              type="button"
+              onClick={downloadCsv}
+              className="tap-target rounded-xl border border-border px-5 py-2.5 text-sm font-semibold hover:bg-secondary"
+            >
+              Download CSV
+            </button>
+          )}
+        </form>
+
+        {genError && <p className="mt-3 text-sm font-medium text-destructive">{genError}</p>}
+
+        {genResults.length > 0 && (
+          <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 bg-secondary">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Student ID</th>
+                  <th className="px-3 py-2 font-semibold">Password</th>
+                </tr>
+              </thead>
+              <tbody>
+                {genResults.map((row) => (
+                  <tr key={row.studentId} className="border-t border-border">
+                    <td className="px-3 py-2 font-mono">{row.studentId}</td>
+                    <td className="px-3 py-2 font-mono">{row.password}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section className="surface-panel mt-8 p-6">
         <h2 className="text-lg font-semibold">Posts per category</h2>
@@ -174,10 +295,7 @@ function AdminDashboard() {
               className="surface-panel flex flex-wrap items-center gap-3 p-4 text-sm"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">
-                  {student.display_name}{" "}
-                  <span className="font-normal text-muted-foreground">@{student.username}</span>
-                </p>
+                <p className="truncate font-semibold">@{student.username}</p>
                 <p className="text-xs text-muted-foreground">
                   {student.college_name} · {student.department_name}
                 </p>

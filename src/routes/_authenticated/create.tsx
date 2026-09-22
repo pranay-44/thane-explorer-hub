@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { PostForm, optimizeImage, type PostFormValues } from "@/components/PostForm";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useSession } from "@/lib/use-auth";
+import { useSession } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({
@@ -36,16 +36,15 @@ export async function uploadCover(userId: string, file: File) {
 
 function CreatePost() {
   const { user } = useSession();
-  const { data: profile, isLoading } = useProfile(user?.id);
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
-  if (isLoading || !profile) {
-    return <p className="mx-auto max-w-2xl p-10 text-muted-foreground">Loading your profile…</p>;
+  if (!user) {
+    return <p className="mx-auto max-w-2xl p-10 text-muted-foreground">Loading…</p>;
   }
 
   async function handleSubmit(values: PostFormValues, file: File | null) {
-    if (!user || !file || !profile) return;
+    if (!user || !file) return;
     setSubmitting(true);
     try {
       const imagePath = await uploadCover(user.id, file);
@@ -58,9 +57,9 @@ function CreatePost() {
           description: values.description,
           location_url: values.location_url || null,
           image_url: imagePath,
-          author_name: profile.display_name,
-          author_college: profile.college_name,
-          author_department: profile.department_name,
+          author_name: values.author_name,
+          author_college: values.author_college,
+          author_department: values.author_department,
         })
         .select("id")
         .single();
@@ -80,16 +79,7 @@ function CreatePost() {
       <p className="mt-2 text-sm text-muted-foreground">
         Tell fellow students what makes this spot worth the trip.
       </p>
-      <PostForm
-        student={{
-          display_name: profile.display_name,
-          college_name: profile.college_name,
-          department_name: profile.department_name,
-        }}
-        submitLabel="Publish place"
-        submitting={submitting}
-        onSubmit={handleSubmit}
-      />
+      <PostForm submitLabel="Publish place" submitting={submitting} onSubmit={handleSubmit} />
     </div>
   );
 }

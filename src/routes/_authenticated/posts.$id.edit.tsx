@@ -7,7 +7,7 @@ import { PostForm, type PostFormValues } from "@/components/PostForm";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadCover } from "@/routes/_authenticated/create";
 import type { Category } from "@/lib/categories";
-import { useProfile, useSession } from "@/lib/use-auth";
+import { useSession } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/_authenticated/posts/$id/edit")({
   head: () => ({
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/_authenticated/posts/$id/edit")({
 function EditPost() {
   const { id } = Route.useParams();
   const { user } = useSession();
-  const { data: profile } = useProfile(user?.id);
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,7 +41,7 @@ function EditPost() {
     },
   });
 
-  if (isLoading || !profile) {
+  if (isLoading) {
     return <p className="mx-auto max-w-2xl p-10 text-muted-foreground">Loading…</p>;
   }
 
@@ -69,6 +68,9 @@ function EditPost() {
           description: values.description,
           location_url: values.location_url || null,
           image_url: imagePath,
+          author_name: values.author_name,
+          author_college: values.author_college,
+          author_department: values.author_department,
         })
         .eq("id", post.id);
       if (error) throw error;
@@ -93,16 +95,14 @@ function EditPost() {
         Leave the image field empty to keep the current cover photo.
       </p>
       <PostForm
-        student={{
-          display_name: profile.display_name,
-          college_name: profile.college_name,
-          department_name: profile.department_name,
-        }}
         initial={{
           title: post.title,
           category: post.category as Category,
           description: post.description,
           location_url: post.location_url ?? "",
+          author_name: post.author_name,
+          author_college: post.author_college,
+          author_department: post.author_department,
           image_url: post.image_url,
         }}
         submitLabel="Save changes"

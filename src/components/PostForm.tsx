@@ -31,15 +31,24 @@ export const postSchema = z.object({
     .trim()
     .min(50, "Description must be at least 50 characters")
     .max(2000, "Description must be 2000 characters or fewer"),
+  author_name: z
+    .string()
+    .trim()
+    .min(2, "Enter your full real name")
+    .max(80, "Name must be 80 characters or fewer"),
+  author_college: z
+    .string()
+    .trim()
+    .min(2, "Enter your college name")
+    .max(100, "College name must be 100 characters or fewer"),
+  author_department: z
+    .string()
+    .trim()
+    .min(2, "Enter your class/year")
+    .max(50, "Must be 50 characters or fewer"),
 });
 
 export type PostFormValues = z.infer<typeof postSchema>;
-
-export type StudentInfo = {
-  display_name: string;
-  college_name: string;
-  department_name: string;
-};
 
 /** Validates magic bytes so a renamed script can't pass as an image. */
 async function hasImageSignature(file: File): Promise<boolean> {
@@ -79,17 +88,24 @@ export async function optimizeImage(file: File): Promise<Blob> {
 }
 
 type Props = {
-  student: StudentInfo;
   initial?: PostFormValues & { image_url: string | null };
   submitLabel: string;
   submitting: boolean;
   onSubmit: (values: PostFormValues, imageFile: File | null) => void;
 };
 
-export function PostForm({ student, initial, submitLabel, submitting, onSubmit }: Props) {
-  const [values, setValues] = useState<PostFormValues>(
-    initial ?? { title: "", category: "" as Category, location_url: "", description: "" },
-  );
+const emptyValues: PostFormValues = {
+  title: "",
+  category: "" as Category,
+  location_url: "",
+  description: "",
+  author_name: "",
+  author_college: "",
+  author_department: "",
+};
+
+export function PostForm({ initial, submitLabel, submitting, onSubmit }: Props) {
+  const [values, setValues] = useState<PostFormValues>(initial ?? emptyValues);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [file, setFile] = useState<File | null>(null);
@@ -151,6 +167,9 @@ export function PostForm({ student, initial, submitLabel, submitting, onSubmit }
       category: true,
       location_url: true,
       description: true,
+      author_name: true,
+      author_college: true,
+      author_department: true,
       image: true,
     });
     if (!parsed.success || imageRequired) return;
@@ -259,14 +278,55 @@ export function PostForm({ student, initial, submitLabel, submitting, onSubmit }
           />
         )}
 
-        <div className="surface-panel space-y-3 p-5">
-          <h2 className="text-sm font-semibold">Student information</h2>
-          <ReadOnly label="Student name" value={student.display_name} />
-          <ReadOnly label="College" value={student.college_name} />
-          <ReadOnly label="Department" value={student.department_name} />
-          <p className="text-xs text-muted-foreground">
-            These come from your account and can't be edited here.
-          </p>
+        <div className="surface-panel space-y-4 p-5">
+          <div>
+            <h2 className="text-sm font-semibold">Your details</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              This is what other students will see on this post — enter your real
+              name, not your Student ID.
+            </p>
+          </div>
+
+          <Field label="Full name" htmlFor="author_name" error={show("author_name")}>
+            <input
+              id="author_name"
+              value={values.author_name}
+              maxLength={80}
+              onChange={(event) => update("author_name", event.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, author_name: true }))}
+              className={inputClass(show("author_name"))}
+              aria-invalid={Boolean(show("author_name"))}
+            />
+          </Field>
+
+          <Field label="College" htmlFor="author_college" error={show("author_college")}>
+            <input
+              id="author_college"
+              value={values.author_college}
+              maxLength={100}
+              onChange={(event) => update("author_college", event.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, author_college: true }))}
+              className={inputClass(show("author_college"))}
+              aria-invalid={Boolean(show("author_college"))}
+            />
+          </Field>
+
+          <Field
+            label="Class / Year"
+            htmlFor="author_department"
+            error={show("author_department")}
+            hint="e.g. TYBSc IT, FYJC Commerce"
+          >
+            <input
+              id="author_department"
+              value={values.author_department}
+              maxLength={50}
+              onChange={(event) => update("author_department", event.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, author_department: true }))}
+              className={inputClass(show("author_department"))}
+              aria-invalid={Boolean(show("author_department"))}
+            />
+          </Field>
         </div>
 
         <button
@@ -312,15 +372,6 @@ function Field({
       ) : hint ? (
         <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>
       ) : null}
-    </div>
-  );
-}
-
-function ReadOnly({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <p className="text-sm font-medium">{value}</p>
     </div>
   );
 }
